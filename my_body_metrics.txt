@@ -1,0 +1,42 @@
+=== REPORTE DE COMPOSICIÓN CORPORAL ===
+Fecha: 2025-07-25 14:49:06
+
+--- DATOS BÁSICOS ---
+Peso: 82.2 kg
+Altura: 170 cm
+Edad: 20 años
+Sexo: male
+Impedancia: 399 ohm
+Cintura: 87.0 cm
+Cuello: 43.0 cm
+Cadera: 91.0 cm
+Muslo: 65.0 cm
+
+--- ÍNDICE DE MASA CORPORAL ---
+BMI: 28.4 kg/m²
+Categoría: Sobrepeso
+
+--- COMPOSICIÓN CORPORAL ---
+Masa libre de grasa (FFM Wu): 63.8 kg
+Porcentaje de grasa: 22.4%
+Masa grasa: 18.4 kg
+Masa muscular esquelética (Janssen): 36.6 kg
+
+--- AGUA CORPORAL ---
+Agua corporal total (TBW): 35.6 L
+Agua extracelular (ECW): 13.5 L
+Agua intracelular (ICW): 22.1 L
+Porcentaje de agua: 43.3%
+
+--- METABOLISMO ---
+Tasa metabólica basal (Cunningham): 1747 kcal/día
+
+--- GRASA VISCERAL ---
+Área de grasa visceral (Liu): 75.7 cm²
+
+--- REFERENCIAS ---
+FFM: Wu et al. (2015) - validado contra DEXA
+Masa muscular: Janssen et al. (2000)
+TBW: Kushner & Schoeller
+BMR: Cunningham (1980)
+Grasa visceral: Liu et al. (2022)

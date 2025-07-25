@@ -2,7 +2,12 @@ import asyncio
 import binascii
 from bleak import BleakScanner
 from datetime import datetime
-from body_metrics import bodyMetrics
+from enhanced_body_metrics import EnhancedBodyMetrics
+from user_config import (
+    USER_HEIGHT, USER_AGE, USER_SEX, MISCALE_MAC,
+    USER_WAIST, USER_NECK, USER_HIP, USER_THIGH,
+    OUTPUT_FILENAME, SCAN_TIMEOUT, READ_DURATION
+)
 
 async def main(MISCALE_MAC):
     stop_event = asyncio.Event()
@@ -62,8 +67,8 @@ async def main(MISCALE_MAC):
         while not valid_data_found:
             await asyncio.sleep(1)  # Esperar hasta que se encuentren datos válidos
 
-        # Leer datos durante 10 segundos después de encontrar los primeros datos válidos
-        for _ in range(10):
+        # Leer datos durante el tiempo configurado después de encontrar los primeros datos válidos
+        for _ in range(READ_DURATION):
             await asyncio.sleep(1)
 
         stop_event.set()  # Detener la lectura de datos
@@ -71,9 +76,53 @@ async def main(MISCALE_MAC):
         print(f"Final Impedance: {globalImpedance}")
         print(f"Final Weight: {globalWeight}")  
 
-        bm = bodyMetrics(weight=globalWeight, height=168, age=19, sex='male', impedance=globalImpedance)
-        bm.saveMetricsToFile('body_metrics.txt')
+        # Crear instancia de EnhancedBodyMetrics con datos del usuario
+        print("\nCalculando composición corporal...")
+        
+        # Crear diccionario con argumentos básicos
+        metrics_args = {
+            'weight': globalWeight,
+            'height': USER_HEIGHT,
+            'age': USER_AGE,
+            'sex': USER_SEX,
+            'impedance': globalImpedance
+        }
+        
+        # Agregar datos antropométricos si están disponibles
+        if USER_WAIST is not None:
+            metrics_args['waist'] = USER_WAIST
+        if USER_NECK is not None:
+            metrics_args['neck'] = USER_NECK
+        if USER_HIP is not None:
+            metrics_args['hip'] = USER_HIP
+        if USER_THIGH is not None:
+            metrics_args['thigh'] = USER_THIGH
+        
+        # Crear instancia de métricas
+        bm = EnhancedBodyMetrics(**metrics_args)
+        
+        # Mostrar resumen en consola
+        bm.print_summary()
+        
+        # Guardar métricas completas en archivo
+        bm.save_metrics_to_file(OUTPUT_FILENAME)
+        
+        print(f"\n✅ Análisis completado. Resultados guardados en: {OUTPUT_FILENAME}")
+        
+        return bm  # Retornar la instancia para uso posterior
 
 if __name__ == "__main__":
-    MISCALE_MAC = "d8:e7:2f:a6:39:a6"  # Reemplaza con la dirección MAC de tu báscula
-    asyncio.run(main(MISCALE_MAC))
+    print("🏃‍♂️ Iniciando escáner de composición corporal...")
+    print(f"📡 Buscando báscula: {MISCALE_MAC}")
+    print(f"👤 Usuario: {USER_AGE} años, {USER_HEIGHT}cm, {USER_SEX}")
+    if USER_WAIST or USER_NECK:
+        print("📏 Datos antropométricos adicionales configurados")
+    print("⚖️  Asegúrate de que la báscula esté encendida y sube a ella para obtener mediciones...")
+    print()
+    
+    try:
+        result = asyncio.run(main(MISCALE_MAC))
+    except KeyboardInterrupt:
+        print("\n❌ Medición cancelada por el usuario")
+    except Exception as e:
+        print(f"\n❌ Error durante la medición: {e}")

@@ -1,0 +1,34 @@
+=== REPORTE DE COMPOSICIÓN CORPORAL ===
+Fecha: 2025-07-25 14:42:04
+
+--- DATOS BÁSICOS ---
+Peso: 70.0 kg
+Altura: 170 cm
+Edad: 30 años
+Sexo: male
+Impedancia: 500 ohm
+
+--- ÍNDICE DE MASA CORPORAL ---
+BMI: 24.2 kg/m²
+Categoría: Peso normal
+
+--- COMPOSICIÓN CORPORAL ---
+Masa libre de grasa (FFM Wu): 54.2 kg
+Porcentaje de grasa: 22.6%
+Masa grasa: 15.8 kg
+Masa muscular esquelética (Janssen): 30.0 kg
+
+--- AGUA CORPORAL ---
+Agua corporal total (TBW): 29.4 L
+Agua extracelular (ECW): 11.2 L
+Agua intracelular (ICW): 18.2 L
+Porcentaje de agua: 42.0%
+
+--- METABOLISMO ---
+Tasa metabólica basal (Cunningham): 1540 kcal/día
+
+--- REFERENCIAS ---
+FFM: Wu et al. (2015) - validado contra DEXA
+Masa muscular: Janssen et al. (2000)
+TBW: Kushner & Schoeller
+BMR: Cunningham (1980)
