@@ -1,4 +1,4 @@
-from math import floor
+from math import floor, log10
 import sys
 from datetime import datetime
 
@@ -68,6 +68,73 @@ class EnhancedBodyMetrics:
         ffm = self.get_ffm_wu()
         fat_pct = 100 * (self.weight - ffm) / self.weight
         return self._check_bounds(fat_pct, 2.0, 60.0)
+
+    def get_fat_percentage_navy(self) -> float:
+        """
+        % de grasa usando método de la Marina de EE.UU. (U.S. Navy):
+        Hombres: 86.010*log10(waist - neck) - 70.041*log10(height) + 36.76
+        Mujeres: 163.205*log10(waist + hip - neck) - 97.684*log10(height) - 78.387
+        Requiere waist y neck (y hip en mujeres)
+        """
+        if self.waist is None or self.neck is None:
+            raise ValueError("Waist y neck necesarios para método Navy")
+        if self.sex == 'male':
+            bf = 86.010 * log10(self.waist - self.neck) \
+               - 70.041 * log10(self.height) + 36.76
+        else:
+            if self.hip is None:
+                raise ValueError("Hip necesario para método Navy en mujeres")
+            bf = 163.205 * log10(self.waist + self.hip - self.neck) \
+               - 97.684 * log10(self.height) - 78.387
+        return self._check_bounds(bf, 2.0, 60.0)
+
+    def get_body_fat_analysis(self) -> dict:
+        """
+        Análisis comparativo de los métodos de grasa corporal disponibles
+        Retorna un diccionario con todos los métodos y su análisis
+        """
+        analysis = {
+            'bia_method': {
+                'value': self.get_fat_percentage(),
+                'description': 'Bioimpedancia (Wu et al. 2015)',
+                'reliability': 'Alta - validado contra DEXA'
+            }
+        }
+        
+        # Agregar método Navy si hay datos disponibles
+        try:
+            navy_value = self.get_fat_percentage_navy()
+            analysis['navy_method'] = {
+                'value': navy_value,
+                'description': 'Método U.S. Navy (antropométrico)',
+                'reliability': 'Media - basado en medidas corporales'
+            }
+            
+            # Calcular concordancia
+            difference = abs(analysis['bia_method']['value'] - navy_value)
+            if difference <= 2.0:
+                concordance = 'Excelente'
+            elif difference <= 4.0:
+                concordance = 'Buena'
+            elif difference <= 6.0:
+                concordance = 'Moderada'
+            else:
+                concordance = 'Pobre'
+                
+            analysis['comparison'] = {
+                'difference': difference,
+                'concordance': concordance,
+                'recommended': 'BIA' if difference <= 3.0 else 'Promedio de ambos métodos'
+            }
+            
+        except ValueError:
+            analysis['navy_method'] = {
+                'value': None,
+                'description': 'No disponible (faltan datos antropométricos)',
+                'reliability': 'N/A'
+            }
+            
+        return analysis
 
     def get_muscle_mass_janssen(self) -> float:
         """
@@ -190,7 +257,19 @@ class EnhancedBodyMetrics:
                 # Composición corporal
                 f.write(f"\n--- COMPOSICIÓN CORPORAL ---\n")
                 f.write(f"Masa libre de grasa (FFM Wu): {self.get_ffm_wu():.1f} kg\n")
-                f.write(f"Porcentaje de grasa: {self.get_fat_percentage():.1f}%\n")
+                
+                # Análisis detallado de grasa corporal
+                fat_analysis = self.get_body_fat_analysis()
+                f.write(f"Porcentaje de grasa (BIA Wu): {fat_analysis['bia_method']['value']:.1f}%\n")
+                
+                if fat_analysis['navy_method']['value'] is not None:
+                    f.write(f"Porcentaje de grasa (Navy): {fat_analysis['navy_method']['value']:.1f}%\n")
+                    f.write(f"Diferencia entre métodos: {fat_analysis['comparison']['difference']:.1f}%\n")
+                    f.write(f"Concordancia: {fat_analysis['comparison']['concordance']}\n")
+                    f.write(f"Recomendación: {fat_analysis['comparison']['recommended']}\n")
+                else:
+                    f.write("Porcentaje de grasa (Navy): No disponible (faltan datos antropométricos)\n")
+                
                 f.write(f"Masa grasa: {(self.weight * self.get_fat_percentage() / 100):.1f} kg\n")
                 f.write(f"Masa muscular esquelética (Janssen): {self.get_muscle_mass_janssen():.1f} kg\n")
                 
@@ -213,6 +292,8 @@ class EnhancedBodyMetrics:
                 
                 f.write(f"\n--- REFERENCIAS ---\n")
                 f.write("FFM: Wu et al. (2015) - validado contra DEXA\n")
+                f.write("% Grasa BIA: Derivado de FFM Wu\n")
+                f.write("% Grasa Navy: Método U.S. Navy (antropométrico)\n")
                 f.write("Masa muscular: Janssen et al. (2000)\n")
                 f.write("TBW: Kushner & Schoeller\n")
                 f.write("BMR: Cunningham (1980)\n")
@@ -228,7 +309,17 @@ class EnhancedBodyMetrics:
         """Imprime un resumen de las métricas principales"""
         print("\n=== RESUMEN DE COMPOSICIÓN CORPORAL ===")
         print(f"BMI: {self.get_bmi():.1f} kg/m² ({self.get_bmi_category()})")
-        print(f"Grasa corporal: {self.get_fat_percentage():.1f}%")
+        print(f"Grasa corporal (BIA): {self.get_fat_percentage():.1f}%")
+        
+        # Mostrar comparación con método Navy si es posible
+        try:
+            navy_fat = self.get_fat_percentage_navy()
+            print(f"Grasa corporal (Navy): {navy_fat:.1f}%")
+            difference = abs(self.get_fat_percentage() - navy_fat)
+            print(f"Diferencia entre métodos: {difference:.1f}%")
+        except ValueError:
+            print("Grasa corporal (Navy): No disponible")
+        
         print(f"Masa muscular: {self.get_muscle_mass_janssen():.1f} kg")
         print(f"Agua corporal: {self.get_tbw_kushner():.1f} L ({(self.get_tbw_kushner() / self.weight * 100):.1f}%)")
         print(f"TMB: {self.get_bmr_cunningham():.0f} kcal/día")
